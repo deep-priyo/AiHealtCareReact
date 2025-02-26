@@ -15,20 +15,43 @@ const Diagnosis = () => {
     }
   };
 
-  const handleDiagnosis = () => {
+  const handleDiagnosis = async () => {
     if (!report) {
       alert("Please upload a report first!");
       return;
     }
+
     setLoading(true);
     setResult(null);
     setApiReport(null);
 
-    // API integration will be added here later
-    setTimeout(() => {
+    // Prepare FormData for API request
+    const formData = new FormData();
+    formData.append("image", report); // Image file
+    formData.append("symptoms", ""); // Add user-entered symptoms if needed
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/analyze", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResult(data); // Store AI response properly
+      } else {
+        alert("Error: " + data.error);
+      }
+
+    } catch (error) {
+      console.error("Error connecting to API:", error);
+      alert("Failed to connect to server.");
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
+
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -168,25 +191,12 @@ const Diagnosis = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <h3 className="text-lg font-medium text-white">
-                              Analysis Complete
+                              AI Diagnosis Report
                             </h3>
                             <p className="text-gray-300 text-sm">
-                              Report analyzed successfully
+                              {result.diagnosis} {/* Display AI response here */}
                             </p>
                           </div>
-                          <div className="px-3 py-1 rounded-full flex items-center bg-green-500/20 text-green-400">
-                            <Check size={16} className="mr-1" /> Normal
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="text-white font-medium mb-2">Findings</h4>
-                          <ul className="space-y-2">
-                            <li className="bg-gray-700/50 p-3 rounded-lg flex items-start">
-                              <Check size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                              <span className="text-gray-300">Findings will be shown here</span>
-                            </li>
-                          </ul>
                         </div>
                       </div>
                   ) : (
@@ -201,6 +211,7 @@ const Diagnosis = () => {
                       </div>
                   )}
                 </div>
+
               </div>
             </div>
           </div>
